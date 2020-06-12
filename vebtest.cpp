@@ -21,13 +21,23 @@ TryMain( int argc, char *argv[] )
 #define USAGE "Usage: %s"
     g_strProgramName = *argv;
     n_SysLog::InitSysLog( argv[0], LOG_PERROR, LOG_USER );
-
+#if 0
     typedef VebTreeFixed< 65536 > _tyVebTree64;
     _tyVebTree64 veb;
     size_t stSizeOfVeb = sizeof(veb);
     const size_t stUniverse = _tyVebTree64::s_kstUniverse;
+#else
+    typedef VebTreeVariable< 256 > _tyVebTreeSummary;
+    typedef VebTreeVariable< 65536, _tyVebTreeSummary > _tyVebTree64;
+    _tyVebTree64 veb;
+    veb.Init( 1000000 );
+    const size_t stUniverse = 1000000;
+#endif
     for ( size_t stCur = 0; stCur < stUniverse; ++stCur )
         veb.Insert( stCur );
+    for ( size_t stCur = 0; stCur < stUniverse; ++stCur )
+        veb.Delete( stCur );
+    assert( !veb.FHasAnyElements() );
     return 0;
 }
 
