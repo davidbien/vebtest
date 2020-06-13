@@ -30,13 +30,27 @@ TryMain( int argc, char *argv[] )
     typedef VebTreeVariable< 256 > _tyVebTreeSummary;
     typedef VebTreeVariable< 65536, _tyVebTreeSummary > _tyVebTree64;
     _tyVebTree64 veb;
-    veb.Init( 1000000 );
-    const size_t stUniverse = 1000000;
+    veb.Init( 10000000 );
+    const size_t stUniverse = 10000000;
 #endif
     for ( size_t stCur = 0; stCur < stUniverse; ++stCur )
+    {
+        if ( 31 == stCur )
+        {
+            int Z = 1;
+            ++Z;
+        }
         veb.Insert( stCur );
+    }
     for ( size_t stCur = 0; stCur < stUniverse; ++stCur )
+    {
+        if ( 63 == stCur )
+        {
+            int Z = 1;
+            ++Z;
+        }
         veb.Delete( stCur );
+    }
     assert( !veb.FHasAnyElements() );
     return 0;
 }
