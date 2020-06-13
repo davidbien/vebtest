@@ -77,10 +77,10 @@ TryMain( int argc, char *argv[] )
         bvMirror.setbit( st );
         nInserted += veb.FCheckInsert( st );
     }
-    n_SysLog::Log( eslmtInfo, "%s: nInserted[%ul]", g_strProgramName.c_str(), nInserted );
+    n_SysLog::Log( eslmtInfo, "%s: nInserted[%lu]", g_strProgramName.c_str(), nInserted );
 
     // Make some copies so we can reuse them:
-    
+
 
    return 0;
 }
