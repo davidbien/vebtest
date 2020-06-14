@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/Debug_x86_64/vebtest.exe",
-            "args": [ "" ],
+            "args": [ "30", "1592098257" ],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",
             "environment": [],

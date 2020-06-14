@@ -25,14 +25,14 @@ TryMain( int argc, char *argv[] )
     g_strProgramName = *argv;
     n_SysLog::InitSysLog( argv[0], LOG_PERROR, LOG_USER );
 #if 0
-    typedef VebTreeFixed< 65536 > _tyVebTree64;
-    _tyVebTree64 veb;
+    typedef VebTreeFixed< 65536 > _tyVebTree;
+    _tyVebTree veb;
     size_t stSizeOfVeb = sizeof(veb);
-    const size_t stUniverse = _tyVebTree64::s_kstUniverse;
+    const size_t stUniverse = _tyVebTree::s_kstUniverse;
 #else
-    typedef VebTreeVariable< 256 > _tyVebTreeSummary;
-    typedef VebTreeVariable< 65536, _tyVebTreeSummary > _tyVebTree64;
-    _tyVebTree64 veb;
+    typedef VebTreeWrap< 256 > _tyVebTreeSummary;
+    typedef VebTreeWrap< 65536, _tyVebTreeSummary > _tyVebTree;
+    _tyVebTree veb;
     const size_t stUniverse = 1000000;
     veb.Init( stUniverse );
 #endif
@@ -46,17 +46,28 @@ TryMain( int argc, char *argv[] )
         nPercentPop = atoi( argv[1] );
     if ( nPercentPop > 1000 )
         nPercentPop = 1000;
+    else
+    if ( !nPercentPop )
+        nPercentPop = 30;
     n_SysLog::Log( eslmtInfo, "%s: nPercentPop[%u/1000]", g_strProgramName.c_str(), nPercentPop );
 
     for ( size_t stCur = 0; stCur < stUniverse; ++stCur )
     {
         veb.Insert( stCur );
     }
+
+    // Make some copies so we can reuse them:
+    _tyVebTree vebCopy( veb );
+    _tyVebTree vebCopy2;
+    vebCopy2 = vebCopy;
+
     for ( size_t stCur = 0; stCur < stUniverse; ++stCur )
     {
-        veb.Delete( stCur );
+        vebCopy2.Delete( stCur );
     }
-    assert( !veb.FHasAnyElements() );
+    assert( !vebCopy2.FHasAnyElements() );
+    assert( vebCopy2.FEmpty( true ) ); // Recursively ensure emptiness.
+    vebCopy2.swap( veb );
     assert( veb.FEmpty( true ) ); // Recursively ensure emptiness.
 
     // Now test successor and predecessor.
@@ -68,6 +79,8 @@ TryMain( int argc, char *argv[] )
     auto genRand = std::bind( sidDist, rneDefault );
 
     _tyBV bvMirror( stUniverse );
+    bvMirror.clear();
+    uint64_t nSetBitsInit = bvMirror.countsetbits();
 
     size_t nElementsGenerate = ( stUniverse * nPercentPop ) / 1000;
     size_t nInserted = 0;
@@ -78,11 +91,71 @@ TryMain( int argc, char *argv[] )
         nInserted += veb.FCheckInsert( st );
     }
     n_SysLog::Log( eslmtInfo, "%s: nInserted[%lu]", g_strProgramName.c_str(), nInserted );
+    uint64_t nSetBitsBefore = bvMirror.countsetbits();
+    assert( nInserted == nSetBitsBefore );
 
-    // Make some copies so we can reuse them:
+    vebCopy2 = veb;
+    assert( vebCopy2 == veb );
+    assert( veb == vebCopy2 );
+    vebCopy.Clear();
+    vebCopy.swap( vebCopy2 );
+    assert( vebCopy2.FEmpty( true ) );
+    _tyVebTree vebCopy3( std::move( vebCopy ) );
+    //vebCopy2 = std::move( vebCopy );
+    assert( vebCopy.FEmpty( true ) );
+    assert( vebCopy3 == veb );
+    assert( veb == vebCopy3 );
 
+    vebCopy2 = std::move( vebCopy3 );
+    assert( vebCopy3.FEmpty( true ) );
+    assert( vebCopy2 == veb );
 
-   return 0;
+    // Now let's actually get to the successor and predecessor testing:
+    _tyBV bvMirrorCopy( bvMirror );
+    uint64_t nSetBitsBeforeCopy = bvMirrorCopy.countsetbits();
+    assert( nSetBitsBeforeCopy == nSetBitsBefore );
+
+    { //B: Successor:
+        // Algorithm: Move through and get each successive bit and clear it in the bvMirror.
+        // Then bvMirror should be empty at the end.
+        // Boundary: Bit 0.
+        if ( veb.FHasElement( 0 ) )
+            bvMirror.clearbit( 0 );
+        size_t nCurEl = 0;
+        size_t nSuccessor;
+        while( !!( nSuccessor = veb.NSuccessor( nCurEl ) ) )
+        {
+            assert( nSuccessor > nCurEl );
+            assert( bvMirror.isbitset( nSuccessor ) );
+            bvMirror.clearbit( nSuccessor );
+            nCurEl = nSuccessor;
+        }
+        uint64_t nSetBitsAfter = bvMirror.countsetbits();
+        assert( !nSetBitsAfter );
+    } //EB
+
+    { //B: Predecessor:
+        // Algorithm: Move through and get each predecessive bit and clear it in the bvMirrorCopy.
+        // Then bvMirrorCopy should be empty at the end.
+        // Boundary: Bit 0.
+        if ( veb.FHasElement( stUniverse-1 ) )
+            bvMirrorCopy.clearbit( stUniverse-1 );
+        //size_t nCurEl = 983084;
+        size_t nCurEl = stUniverse-1;
+        size_t nPredecessor;
+        size_t nthCall = 0;
+        while( _tyVebTree::s_kitNoPredecessor != ( nPredecessor = veb.NPredecessor( nCurEl ) ) )
+        {
+            assert( nPredecessor < nCurEl );
+            assert( bvMirrorCopy.isbitset( nPredecessor ) );
+            bvMirrorCopy.clearbit( nPredecessor );
+            nCurEl = nPredecessor;
+            ++nthCall;
+        }
+        assert( !bvMirrorCopy.countsetbits() );
+    } //EB
+
+    return 0;
 }
 
 int
