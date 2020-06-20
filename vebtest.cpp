@@ -34,7 +34,7 @@ TryMain( int argc, char *argv[] )
     typedef VebTreeWrap< 65536, _tyVebTreeSummary > _tyVebTree;
     _tyVebTree veb;
     veb.AssertValid();
-    const size_t stUniverse = 1000000;
+    const size_t stUniverse = 65535;
     veb.Init( stUniverse );
     veb.AssertValid();
 #endif
