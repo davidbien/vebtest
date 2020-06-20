@@ -34,7 +34,7 @@ TryMain( int argc, char *argv[] )
     typedef VebTreeWrap< 65536, _tyVebTreeSummary > _tyVebTree;
     _tyVebTree veb;
     veb.AssertValid();
-    const size_t stUniverse = 65535;
+    const size_t stUniverse = INT_MAX + 65535ull;
     veb.Init( stUniverse );
     veb.AssertValid();
 #endif
@@ -100,11 +100,22 @@ TryMain( int argc, char *argv[] )
         size_t st = genRand();
         bvMirror.setbit( st );
         nInserted += veb.FCheckInsert( st );
-        veb.AssertValid();
     }
+    veb.AssertValid();
     n_SysLog::Log( eslmtInfo, "%s: nInserted[%lu]", g_strProgramName.c_str(), nInserted );
     uint64_t nSetBitsBefore = bvMirror.countsetbits();
     assert( nInserted == nSetBitsBefore );
+
+    {//B - test bitwise functions:
+        _tyVebTree vebInvert( veb );
+        vebInvert.BitwiseInvert();
+        vebInvert.AssertValid();
+        vebInvert &= veb;
+        vebInvert.AssertValid();
+        assert( vebInvert.FEmpty( true ) );
+        vebInvert |= veb;
+        assert( vebInvert == veb );
+    }//EB
 
     vebCopy2 = veb;
     assert( vebCopy2 == veb );
