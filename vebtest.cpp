@@ -59,6 +59,11 @@ TryMain( int argc, char *argv[] )
     }
     veb.AssertValid();
 
+    _tyVebTree vebAll( stUniverse );
+    vebAll.InsertAll();
+    vebAll.AssertValid();
+    assert( vebAll == veb );
+
     // Make some copies so we can reuse them:
     _tyVebTree vebCopy( veb );
     vebCopy.AssertValid();
