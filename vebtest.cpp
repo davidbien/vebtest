@@ -33,8 +33,10 @@ TryMain( int argc, char *argv[] )
     typedef VebTreeWrap< 256 > _tyVebTreeSummary;
     typedef VebTreeWrap< 65536, _tyVebTreeSummary > _tyVebTree;
     _tyVebTree veb;
+    veb.AssertValid();
     const size_t stUniverse = 1000000;
     veb.Init( stUniverse );
+    veb.AssertValid();
 #endif
     uint32_t nRandSeed = time(0);
     if ( argc > 2 )
@@ -55,16 +57,20 @@ TryMain( int argc, char *argv[] )
     {
         veb.Insert( stCur );
     }
+    veb.AssertValid();
 
     // Make some copies so we can reuse them:
     _tyVebTree vebCopy( veb );
+    vebCopy.AssertValid();
     _tyVebTree vebCopy2;
     vebCopy2 = vebCopy;
+    vebCopy2.AssertValid();
 
     for ( size_t stCur = 0; stCur < stUniverse; ++stCur )
     {
         vebCopy2.Delete( stCur );
     }
+    vebCopy2.AssertValid();
     assert( !vebCopy2.FHasAnyElements() );
     assert( vebCopy2.FEmpty( true ) ); // Recursively ensure emptiness.
     vebCopy2.swap( veb );
@@ -89,6 +95,7 @@ TryMain( int argc, char *argv[] )
         size_t st = genRand();
         bvMirror.setbit( st );
         nInserted += veb.FCheckInsert( st );
+        veb.AssertValid();
     }
     n_SysLog::Log( eslmtInfo, "%s: nInserted[%lu]", g_strProgramName.c_str(), nInserted );
     uint64_t nSetBitsBefore = bvMirror.countsetbits();
