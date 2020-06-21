@@ -34,7 +34,7 @@ TryMain( int argc, char *argv[] )
     typedef VebTreeWrap< 65536, _tyVebTreeSummary > _tyVebTree;
     _tyVebTree veb;
     veb.AssertValid();
-    const size_t stUniverse = INT_MAX + 65535ull;
+    const size_t stUniverse = 100000000; //INT_MAX + 65535ull;
     veb.Init( stUniverse );
     veb.AssertValid();
 #endif
@@ -115,6 +115,11 @@ TryMain( int argc, char *argv[] )
         assert( vebInvert.FEmpty( true ) );
         vebInvert |= veb;
         assert( vebInvert == veb );
+        vebInvert.BitwiseInvert();
+        vebInvert ^= veb; // This should make vebInvert fully occupied.
+        vebInvert.AssertValid();
+        vebInvert.BitwiseInvert();
+        assert( vebInvert.FEmpty( true ) );
     }//EB
 
     vebCopy2 = veb;
