@@ -148,9 +148,9 @@ TryMain( int argc, char *argv[] )
     { //B: Successor:
         // Algorithm: Move through and get each successive bit and clear it in the bvMirror.
         // Then bvMirror should be empty at the end.
-        size_t nCurEl = numeric_limits< size_t >::max();
+        size_t nCurEl = _tyVebTree::s_kitNoSuccessor;
         size_t nSuccessor;
-        while( !!( nSuccessor = veb.NSuccessor( nCurEl ) ) )
+        while( _tyVebTree::s_kitNoSuccessor != ( nSuccessor = veb.NSuccessor( nCurEl ) ) )
         {
             assert( ( nCurEl == numeric_limits< size_t >::max() ) || ( nSuccessor > nCurEl ) );
             assert( bvMirror.isbitset( nSuccessor ) );
@@ -165,7 +165,7 @@ TryMain( int argc, char *argv[] )
         // Algorithm: Move through and get each predecessive bit and clear it in the bvMirrorCopy.
         // Then bvMirrorCopy should be empty at the end.
         // Boundary: Bit 0.
-        size_t nCurEl = numeric_limits< size_t >::max();
+        size_t nCurEl = _tyVebTree::s_kitNoPredecessor;
         size_t nPredecessor;
         size_t nthCall = 0;
         while( _tyVebTree::s_kitNoPredecessor != ( nPredecessor = veb.NPredecessor( nCurEl ) ) )
@@ -185,9 +185,9 @@ TryMain( int argc, char *argv[] )
         // Then bvMirror should be empty at the end.
         // Boundary: Bit 0.
         _tyVebTree vebSuccessorDelete( veb );
-        size_t nCurEl = numeric_limits< size_t >::max();
+        size_t nCurEl = _tyVebTree::s_kitNoSuccessor;
         size_t nSuccessor;
-        while( !!( nSuccessor = vebSuccessorDelete.NSuccessorDelete( nCurEl ) ) )
+        while( _tyVebTree::s_kitNoSuccessor != ( nSuccessor = vebSuccessorDelete.NSuccessorDelete( nCurEl ) ) )
         {
             assert( ( nCurEl == numeric_limits< size_t >::max() ) || ( nSuccessor > nCurEl ) );
             assert( bvMirrorCopy2.isbitset( nSuccessor ) );
@@ -205,7 +205,7 @@ TryMain( int argc, char *argv[] )
         // Boundary: Bit 0.
         _tyVebTree vebPredecessorDelete( veb );
         //size_t nCurEl = 983084;
-        size_t nCurEl = numeric_limits< size_t >::max();
+        size_t nCurEl = _tyVebTree::s_kitNoPredecessor;
         size_t nPredecessor;
         while( _tyVebTree::s_kitNoPredecessor != ( nPredecessor = vebPredecessorDelete.NPredecessorDelete( nCurEl ) ) )
         {
