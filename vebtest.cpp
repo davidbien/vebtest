@@ -73,7 +73,8 @@ TryMain( int argc, char *argv[] )
 
     for ( size_t stCur = 0; stCur < stUniverse; ++stCur )
     {
-        vebCopy2.Delete( stCur );
+        bool fDeleted = vebCopy2.FCheckDelete( stCur );
+        assert( fDeleted );
     }
     vebCopy2.AssertValid();
     assert( !vebCopy2.FHasAnyElements() );
@@ -182,6 +183,13 @@ TryMain( int argc, char *argv[] )
         }
         assert( !bvMirrorCopy.countsetbits() );
     } //EB
+
+
+    for ( size_t stCur = stUniverse; --stCur; )
+    {
+        (void)veb.FCheckDelete( stCur );
+    }
+    assert( veb.FEmpty( true ) );
 
     return 0;
 }
