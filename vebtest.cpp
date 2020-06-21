@@ -34,7 +34,7 @@ TryMain( int argc, char *argv[] )
     typedef VebTreeWrap< 65536, _tyVebTreeSummary > _tyVebTree;
     _tyVebTree veb;
     veb.AssertValid();
-    const size_t stUniverse = 100000000; //INT_MAX + 65535ull;
+    const size_t stUniverse = 1000000;// INT_MAX + 65535ull;
     veb.Init( stUniverse );
     veb.AssertValid();
 #endif
@@ -143,6 +143,7 @@ TryMain( int argc, char *argv[] )
     _tyBV bvMirrorCopy( bvMirror );
     uint64_t nSetBitsBeforeCopy = bvMirrorCopy.countsetbits();
     assert( nSetBitsBeforeCopy == nSetBitsBefore );
+    _tyBV bvMirrorCopy2( bvMirror );
 
     { //B: Successor:
         // Algorithm: Move through and get each successive bit and clear it in the bvMirror.
@@ -184,6 +185,56 @@ TryMain( int argc, char *argv[] )
         assert( !bvMirrorCopy.countsetbits() );
     } //EB
 
+    _tyBV bvMirrorCopy3( bvMirrorCopy2 );
+    { //B: SuccessorDelete:
+        // Algorithm: Move through and get each successive bit and clear it in the bvMirror.
+        // Then bvMirror should be empty at the end.
+        // Boundary: Bit 0.
+        _tyVebTree vebSuccessorDelete( veb );
+        if ( vebSuccessorDelete.FHasElement( 0 ) )
+        {
+            bvMirrorCopy2.clearbit( 0 );
+            vebSuccessorDelete.Delete( 0 );
+        }
+        size_t nCurEl = 0;
+        size_t nSuccessor;
+        while( !!( nSuccessor = vebSuccessorDelete.NSuccessorDelete( nCurEl ) ) )
+        {
+            assert( nSuccessor > nCurEl );
+            assert( bvMirrorCopy2.isbitset( nSuccessor ) );
+            bvMirrorCopy2.clearbit( nSuccessor );
+            nCurEl = nSuccessor;
+        }
+        uint64_t nSetBitsAfter = bvMirrorCopy2.countsetbits();
+        assert( !nSetBitsAfter );
+        assert( vebSuccessorDelete.FEmpty( true ) );
+    } //EB
+
+    { //B: PredecessorDelete:
+        // Algorithm: Move through and get each predecessive bit and clear it in the bvMirrorCopy.
+        // Then bvMirrorCopy should be empty at the end.
+        // Boundary: Bit 0.
+        _tyVebTree vebPredecessorDelete( veb );
+        if ( vebPredecessorDelete.FHasElement( stUniverse-1 ) )
+        {
+            vebPredecessorDelete.Delete( stUniverse-1 );
+            bvMirrorCopy3.clearbit( stUniverse-1 );
+        }
+        //size_t nCurEl = 983084;
+        size_t nCurEl = stUniverse-1;
+        size_t nPredecessor;
+        size_t nthCall = 0;
+        while( _tyVebTree::s_kitNoPredecessor != ( nPredecessor = vebPredecessorDelete.NPredecessorDelete( nCurEl ) ) )
+        {
+            assert( nPredecessor < nCurEl );
+            assert( bvMirrorCopy3.isbitset( nPredecessor ) );
+            bvMirrorCopy3.clearbit( nPredecessor );
+            nCurEl = nPredecessor;
+            ++nthCall;
+        }
+        assert( !bvMirrorCopy3.countsetbits() );
+        assert( vebPredecessorDelete.FEmpty( true ) );
+    } //EB
 
     for ( size_t stCur = stUniverse; --stCur; )
     {
