@@ -34,7 +34,7 @@ TryMain( int argc, char *argv[] )
     typedef VebTreeWrap< 65536, _tyVebTreeSummary > _tyVebTree;
     _tyVebTree veb;
     veb.AssertValid();
-    const size_t stUniverse = 1000000;// INT_MAX + 65535ull;
+    const size_t stUniverse = 10000000;// INT_MAX + 65535ull;
     veb.Init( stUniverse );
     veb.AssertValid();
 #endif
@@ -148,14 +148,11 @@ TryMain( int argc, char *argv[] )
     { //B: Successor:
         // Algorithm: Move through and get each successive bit and clear it in the bvMirror.
         // Then bvMirror should be empty at the end.
-        // Boundary: Bit 0.
-        if ( veb.FHasElement( 0 ) )
-            bvMirror.clearbit( 0 );
-        size_t nCurEl = 0;
+        size_t nCurEl = numeric_limits< size_t >::max();
         size_t nSuccessor;
         while( !!( nSuccessor = veb.NSuccessor( nCurEl ) ) )
         {
-            assert( nSuccessor > nCurEl );
+            assert( ( nCurEl == numeric_limits< size_t >::max() ) || ( nSuccessor > nCurEl ) );
             assert( bvMirror.isbitset( nSuccessor ) );
             bvMirror.clearbit( nSuccessor );
             nCurEl = nSuccessor;
@@ -168,10 +165,7 @@ TryMain( int argc, char *argv[] )
         // Algorithm: Move through and get each predecessive bit and clear it in the bvMirrorCopy.
         // Then bvMirrorCopy should be empty at the end.
         // Boundary: Bit 0.
-        if ( veb.FHasElement( stUniverse-1 ) )
-            bvMirrorCopy.clearbit( stUniverse-1 );
-        //size_t nCurEl = 983084;
-        size_t nCurEl = stUniverse-1;
+        size_t nCurEl = numeric_limits< size_t >::max();
         size_t nPredecessor;
         size_t nthCall = 0;
         while( _tyVebTree::s_kitNoPredecessor != ( nPredecessor = veb.NPredecessor( nCurEl ) ) )
@@ -191,16 +185,11 @@ TryMain( int argc, char *argv[] )
         // Then bvMirror should be empty at the end.
         // Boundary: Bit 0.
         _tyVebTree vebSuccessorDelete( veb );
-        if ( vebSuccessorDelete.FHasElement( 0 ) )
-        {
-            bvMirrorCopy2.clearbit( 0 );
-            vebSuccessorDelete.Delete( 0 );
-        }
-        size_t nCurEl = 0;
+        size_t nCurEl = numeric_limits< size_t >::max();
         size_t nSuccessor;
         while( !!( nSuccessor = vebSuccessorDelete.NSuccessorDelete( nCurEl ) ) )
         {
-            assert( nSuccessor > nCurEl );
+            assert( ( nCurEl == numeric_limits< size_t >::max() ) || ( nSuccessor > nCurEl ) );
             assert( bvMirrorCopy2.isbitset( nSuccessor ) );
             bvMirrorCopy2.clearbit( nSuccessor );
             nCurEl = nSuccessor;
@@ -215,22 +204,15 @@ TryMain( int argc, char *argv[] )
         // Then bvMirrorCopy should be empty at the end.
         // Boundary: Bit 0.
         _tyVebTree vebPredecessorDelete( veb );
-        if ( vebPredecessorDelete.FHasElement( stUniverse-1 ) )
-        {
-            vebPredecessorDelete.Delete( stUniverse-1 );
-            bvMirrorCopy3.clearbit( stUniverse-1 );
-        }
         //size_t nCurEl = 983084;
-        size_t nCurEl = stUniverse-1;
+        size_t nCurEl = numeric_limits< size_t >::max();
         size_t nPredecessor;
-        size_t nthCall = 0;
         while( _tyVebTree::s_kitNoPredecessor != ( nPredecessor = vebPredecessorDelete.NPredecessorDelete( nCurEl ) ) )
         {
             assert( nPredecessor < nCurEl );
             assert( bvMirrorCopy3.isbitset( nPredecessor ) );
             bvMirrorCopy3.clearbit( nPredecessor );
             nCurEl = nPredecessor;
-            ++nthCall;
         }
         assert( !bvMirrorCopy3.countsetbits() );
         assert( vebPredecessorDelete.FEmpty( true ) );
