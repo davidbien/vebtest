@@ -34,7 +34,7 @@ TryMain( int argc, char *argv[] )
     typedef VebTreeWrap< 65536, _tyVebTreeSummary > _tyVebTree;
     _tyVebTree veb;
     veb.AssertValid();
-    const size_t stUniverse = 10000000;// INT_MAX + 65535ull;
+    size_t stUniverse = 10000000;// INT_MAX + 65535ull;
     veb.Init( stUniverse );
     veb.AssertValid();
 #endif
@@ -217,6 +217,9 @@ TryMain( int argc, char *argv[] )
         assert( !bvMirrorCopy3.countsetbits() );
         assert( vebPredecessorDelete.FEmpty( true ) );
     } //EB
+
+    veb.Resize( stUniverse /= 2, true );
+    veb.AssertValid();
 
     for ( size_t stCur = stUniverse; --stCur; )
     {
