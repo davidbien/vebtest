@@ -10,7 +10,11 @@
 			"functional": "cpp",
 			"string": "cpp",
 			"type_traits": "cpp",
-			"memory": "cpp"
+			"memory": "cpp",
+			"chrono": "cpp",
+			"condition_variable": "cpp",
+			"mutex": "cpp",
+			"thread": "cpp"
 		}
 	}
 }

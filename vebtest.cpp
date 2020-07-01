@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <thread>
 #include <random>
+#include <chrono>
 #include "syslogmgr.h"
 #include "jsonstrm.h"
 #include "jsonobjs.h"
@@ -18,12 +19,68 @@ std::string g_strProgramName;
 
 __BIENUTIL_USING_NAMESPACE
 
+template < class t_tyTest >
+chrono::steady_clock::duration
+TimeTest( t_tyTest _tTest, uint32_t _nIterations )
+{
+    chrono::steady_clock::duration dTotal = 0;
+    while( _nIterations-- )
+    {
+        chrono::steady_clock::time_point tpBegin = chrono::steady_clock::now();
+        _tTest(); // run test.
+        chrono::steady_clock::time_point tpEnd = chrono::steady_clock::now();
+        dTotal += ( tpEnd - tpBegin );
+        _tTest.reset(); // We don't time the reset.
+    }
+}
+
+class TestBase
+{
+    uint32_t m_nIterations;
+    string m_strDesc;
+};
+
+// Run all timing tests with the given random seed, percentage population, and number of elements.
+void
+TimingTests( uint32_t _nIterations, uint32_t _nRandSeed, uint32_t _nPercentPop, uint64_t _nElements )
+{
+    std::default_random_engine rneDefault( _nRandSeed );
+    std::uniform_int_distribution< size_t > sidDist( 0, _nElements-1 );
+    auto genRand = std::bind( sidDist, rneDefault );
+
+    // Both VebTree and simple_bitvec just memset their memory to zero - no need to time this.
+    typedef VebTreeWrap< 256 > _tyVebTreeSummary;
+    typedef VebTreeWrap< 65536, _tyVebTreeSummary > _tyVebTree;
+    _tyVebTree vebTest( _nElements );
+
+    typedef _simple_bitvec< uint64_t, allocator< uint64_t > > _tyBV;
+    _tyBV sbvTest( _nElements );
+}
+
 int
 TryMain( int argc, char *argv[] )
 {
 #define USAGE "Usage: %s [percentage populated(1-1000)=30][random seed]"
+    typedef JsoValue< char > _tyJsoValue;
     g_strProgramName = *argv;
-    n_SysLog::InitSysLog( argv[0], LOG_PERROR, LOG_USER );
+    {//B
+        _tyJsoValue jv( ejvtObject );
+        _tyJsoValue & rjv = jv("foo");
+        rjv.SetStringValue( "spoo");
+        n_SysLog::InitSysLog( argv[0], LOG_PERROR, LOG_USER, &jv );
+    }//EB
+    const clockid_t cidClockTypeBegin = CLOCK_REALTIME;
+    const clockid_t cidClockTypeEnd = CLOCK_TAI;
+    for ( int cidCur = cidClockTypeBegin; cidCur <= cidClockTypeEnd; ++cidCur )
+    {
+        timespec ts;
+        int n = clock_getres( cidCur, &ts );
+        if ( !n )
+            printf( "clock_getres(): cidCur[%d] ts.tv_sec[%ld] ts.tv_nsec[%ld].\n", cidCur, (size_t)ts.tv_sec, ts.tv_nsec );
+        else
+            fprintf( stderr, "clock_getres(): failed with errno[%d].\n", errno );
+        
+    }
 #if 0
     typedef VebTreeFixed< 65536 > _tyVebTree;
     _tyVebTree veb;
@@ -41,7 +98,11 @@ TryMain( int argc, char *argv[] )
     uint32_t nRandSeed = time(0);
     if ( argc > 2 )
          nRandSeed = atoi( argv[2] );
-    n_SysLog::Log( eslmtInfo, "%s: iRandSeed[%d]", g_strProgramName.c_str(), nRandSeed );
+    {//B
+        _tyJsoValue jvLog( ejvtArray );
+        jvLog( 5 ).SetStringValue( "five" );
+        n_SysLog::Log( eslmtInfo, jvLog, "%s: iRandSeed[%d]", g_strProgramName.c_str(), nRandSeed );
+    }//EB
 
     uint32_t nPercentPop = 30;
     if ( argc > 1 )
