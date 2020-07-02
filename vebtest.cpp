@@ -60,27 +60,52 @@ TimingTests( uint32_t _nIterations, uint32_t _nRandSeed, uint32_t _nPercentPop, 
 int
 TryMain( int argc, char *argv[] )
 {
-#define USAGE "Usage: %s [percentage populated(1-1000)=30][random seed]"
+#define USAGE "Usage: %s nElements nIterations [percentage populated(1-1000)=30] [random seed]"
     typedef JsoValue< char > _tyJsoValue;
     g_strProgramName = *argv;
-    {//B
-        _tyJsoValue jv( ejvtObject );
-        _tyJsoValue & rjv = jv("foo");
-        rjv.SetStringValue( "spoo");
-        n_SysLog::InitSysLog( argv[0], LOG_PERROR, LOG_USER, &jv );
-    }//EB
-    const clockid_t cidClockTypeBegin = CLOCK_REALTIME;
-    const clockid_t cidClockTypeEnd = CLOCK_TAI;
-    for ( int cidCur = cidClockTypeBegin; cidCur <= cidClockTypeEnd; ++cidCur )
+
+    if ( argc < 3 )
     {
-        timespec ts;
-        int n = clock_getres( cidCur, &ts );
-        if ( !n )
-            printf( "clock_getres(): cidCur[%d] ts.tv_sec[%ld] ts.tv_nsec[%ld].\n", cidCur, (size_t)ts.tv_sec, ts.tv_nsec );
-        else
-            fprintf( stderr, "clock_getres(): failed with errno[%d].\n", errno );
-        
+        fprintf( stderr, USAGE "\n", *argv );
+        return -1;
     }
+    uint64_t nElements = strtoul( argv[1], 0, 0 ); // allow hex numbers to be entered.
+    if ( !nElements )
+        nElements = 100;
+    uint64_t nIterations = strtoul( argv[2], 0, 0 ); // allow hex numbers to be entered.
+    if ( !nIterations )
+        nIterations = 1;
+    uint32_t nRandSeed = time(0);
+    if ( argc > 4 )
+    {
+        uint64_t n64RandSeed = strtoul( argv[4], 0, 0 );
+        if ( n64RandSeed > UINT32_MAX )
+        {
+            fprintf( stderr, "%s: nRandSeed is greater than INT32_MAX nRandSeed[%lu] UINT32_MAX[%lu].\n", argv[0], n64RandSeed, uint64_t( UINT32_MAX ) );
+            fprintf( stderr, USAGE "\n", *argv );
+            return -2;
+        }
+        nRandSeed = n64RandSeed;
+    }
+
+    uint32_t nPercentPop = 30;
+    if ( argc > 3 )
+        nPercentPop = atoi( argv[3] );
+    if ( nPercentPop > 1000 )
+        nPercentPop = 1000;
+    else
+    if ( !nPercentPop )
+        nPercentPop = 30;
+    
+    {//B
+        _tyJsoValue jvLog( ejvtObject );
+        jvLog("nElements").SetValue( nElements );
+        jvLog("nIterations").SetValue( nIterations );
+        jvLog("nRandSeed").SetValue( nRandSeed );
+        jvLog("nPercentPop").SetValue( nPercentPop );
+        n_SysLog::InitSysLog( argv[0], LOG_PERROR, LOG_USER, &jvLog );
+    }//EB
+
 #if 0
     typedef VebTreeFixed< 65536 > _tyVebTree;
     _tyVebTree veb;
@@ -91,28 +116,10 @@ TryMain( int argc, char *argv[] )
     typedef VebTreeWrap< 65536, _tyVebTreeSummary > _tyVebTree;
     _tyVebTree veb;
     veb.AssertValid();
-    size_t stUniverse = 10000000;// INT_MAX + 65535ull;
+    size_t stUniverse = nElements;// INT_MAX + 65535ull;
     veb.Init( stUniverse );
     veb.AssertValid();
 #endif
-    uint32_t nRandSeed = time(0);
-    if ( argc > 2 )
-         nRandSeed = atoi( argv[2] );
-    {//B
-        _tyJsoValue jvLog( ejvtArray );
-        jvLog( 5 ).SetStringValue( "five" );
-        n_SysLog::Log( eslmtInfo, jvLog, "%s: iRandSeed[%d]", g_strProgramName.c_str(), nRandSeed );
-    }//EB
-
-    uint32_t nPercentPop = 30;
-    if ( argc > 1 )
-        nPercentPop = atoi( argv[1] );
-    if ( nPercentPop > 1000 )
-        nPercentPop = 1000;
-    else
-    if ( !nPercentPop )
-        nPercentPop = 30;
-    n_SysLog::Log( eslmtInfo, "%s: nPercentPop[%u/1000]", g_strProgramName.c_str(), nPercentPop );
 
     for ( size_t stCur = 0; stCur < stUniverse; ++stCur )
     {
@@ -306,3 +313,17 @@ main( int argc, char **argv )
     }
 }
 
+#if 0
+    const clockid_t cidClockTypeBegin = CLOCK_REALTIME;
+    const clockid_t cidClockTypeEnd = CLOCK_TAI;
+    for ( int cidCur = cidClockTypeBegin; cidCur <= cidClockTypeEnd; ++cidCur )
+    {
+        timespec ts;
+        int n = clock_getres( cidCur, &ts );
+        if ( !n )
+            printf( "clock_getres(): cidCur[%d] ts.tv_sec[%ld] ts.tv_nsec[%ld].\n", cidCur, (size_t)ts.tv_sec, ts.tv_nsec );
+        else
+            fprintf( stderr, "clock_getres(): failed with errno[%d].\n", errno );
+        
+    }
+#endif 
