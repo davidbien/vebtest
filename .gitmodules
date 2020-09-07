@@ -1,4 +1,0 @@
-[submodule "bienutil"]
-	path = bienutil
-	url = git@github.com:davidbien/bienutil.git
-	update = merge
